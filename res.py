@@ -63,7 +63,10 @@ class ScreenWatchAcceptedEvent(Event):
 
             Terminal.info(f"screen watch accepted. {frame_width}, {frame_height}")
 
-            screen_frame_connection = Connection(socket.SOCK_STREAM, (Constants.SERVER_IP, Constants.SCREEN_FRAME_PORT))
+            primary_connection = NetworkUtils.get_primary_connection()
+            if primary_connection is None: return
+
+            screen_frame_connection = Connection(socket.SOCK_STREAM, (primary_connection.addr[0], Constants.SCREEN_FRAME_PORT))
 
             NetworkUtils.add_listener(Events.ScreenFrame_Action, ScreenFrameEvent, DataType.Raw)
 
@@ -123,10 +126,13 @@ class ScreenControlAcceptedEvent(Event):
 
             Terminal.info(f"screen control accepted. {frame_width}, {frame_height}")
 
-            screen_frame_connection = Connection(socket.SOCK_STREAM, (Constants.SERVER_IP, Constants.SCREEN_FRAME_PORT))
-            mouse_connection = Connection(socket.SOCK_DGRAM, (Constants.SERVER_IP, Constants.MOUSE_UPDATE_PORT))
+            primary_connection = NetworkUtils.get_primary_connection()
+            if primary_connection is None: return
 
-            keyboard_connection = Connection(socket.SOCK_STREAM, (Constants.SERVER_IP, Constants.KEYBOARD_UPDATE_PORT))
+            screen_frame_connection = Connection(socket.SOCK_STREAM, (primary_connection.addr[0], Constants.SCREEN_FRAME_PORT))
+            mouse_connection = Connection(socket.SOCK_DGRAM, (primary_connection.addr[0], Constants.MOUSE_UPDATE_PORT))
+
+            keyboard_connection = Connection(socket.SOCK_STREAM, (primary_connection.addr[0], Constants.KEYBOARD_UPDATE_PORT))
 
             def on_press(key: keyboard.Key | keyboard.KeyCode | None): on_keyboard(key, True)
             def on_release(key: keyboard.Key | keyboard.KeyCode | None): on_keyboard(key, False)
