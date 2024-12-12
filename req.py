@@ -90,3 +90,7 @@ class FileUploadRequest(Request):
                 chunk = file.read(Constants.CHUNK_SIZE)
                 self.connection.send_event(Events.FileUpload_Action, [path, total_chunks, chunk])
             global_utils.decrement_requests()
+
+class SecretKeyTransferRequest(Request):
+    def handle(self, secret: bytes):
+        self.connection.send_event(Events.SecretKeyTransfer, [secret])

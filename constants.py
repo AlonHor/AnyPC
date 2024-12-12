@@ -14,6 +14,10 @@ class Constants:
     MOUSE_UPDATE_PORT = 34983
     KEYBOARD_UPDATE_PORT = 34984
 
+    KEY_SIZE = 16
+    NONCE_SIZE = 16
+    TAG_SIZE = 16
+
     LOGO = """
        ▄████████ ███▄▄▄▄   ▄██   ▄          ▄███████▄  ▄████████           _______
       ███    ███ ███▀▀▀██▄ ███   ██▄       ███    ███ ███    ██           |.-----.|

@@ -2,7 +2,7 @@ __author__ = "Alon & K9"
 
 from constants import Constants
 from parser import Parser
-from utils import NetworkUtils, Event, Connection, UnknownEvent, ConnectionClosedEvent, ErrorEvent, SuccessEvent, DataType
+from utils import NetworkUtils, Connection, DataType
 from terminal import Colors, Terminal
 from events import Events
 
@@ -14,6 +14,10 @@ import res
 
 def wait():
     while global_utils.get_requests() != 0:
+        time.sleep(0.1)
+
+def wait_for_rsa():
+    while not global_utils.get_is_rsa():
         time.sleep(0.1)
 
 def main():
@@ -35,6 +39,13 @@ def main():
 
     NetworkUtils.set_primary_connection(connection)
 
+    NetworkUtils.add_listener(Events.PublicKeyTransfer, res.PublicKeyTransferEvent, DataType.Raw)
+
+    Terminal.info("establishing an encrypted connection...")
+
+    wait_for_rsa()
+    Terminal.success("key exchange completed, the connection is now end-to-end encrypted.")
+
     NetworkUtils.add_listener(Events.ScreenshotDone_Response, res.ScreenshotDoneEvent)
     NetworkUtils.add_listener(Events.AcceptScreenControl_Response, res.ScreenControlAcceptedEvent, DataType.Raw)
     NetworkUtils.add_listener(Events.AcceptScreenWatch_Response, res.ScreenWatchAcceptedEvent, DataType.Raw)
@@ -49,6 +60,7 @@ def main():
     while running:
         try:
             wait()
+            print()
             command = Terminal.get_input("$ ", color=Colors.CYAN)
 
             if command == "exit":

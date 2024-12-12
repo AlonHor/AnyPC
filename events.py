@@ -26,6 +26,9 @@ class Events(Enum):
     AcceptScreenWatch_Response = "ACSW"
     CommandRun_Response = "CMDO"
 
+    PublicKeyTransfer = "PUKT"
+    SecretKeyTransfer = "SECT"
+
     OperationSuccess_Response = "SUCC"
     OperationFailed_Response = "ERRR"
     ConnectionClosed = "CLOS"
@@ -42,6 +45,8 @@ class Error(Enum):
     UnknownError = 0
     FileNotFound = 1
     BadPath = 2
+    FailureToSendKey = 3
+    NoVerifyKey = 4
 
     @classmethod
     def from_value(cls, value: int) -> 'Error':

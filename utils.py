@@ -3,11 +3,11 @@ __author__ = "Alon & K9"
 from enum import Enum
 from events import Error, Events
 from terminal import Terminal
+from encryption import Encryption
 
 import global_utils
 import socket
 import threading
-import msvcrt
 import struct
 
 class DataType(Enum):
@@ -44,8 +44,6 @@ class Connection:
                 self.socket.send(data)
 
     def send_event(self, event_id: Events, data: list):
-        global ongoing_requests
-
         global_utils.increment_requests()
         Terminal.debug(f"sending: [{event_id}] alongside {data} with [{global_utils.get_requests()}] ongoing requests...")
 
@@ -72,7 +70,7 @@ class UnknownEvent(Event):
         super().__init__(connection)
 
     def handle(self, data: list[bytes]):
-        Terminal.debug(f"unknown event: {[d.decode() for d in data]}.")
+        Terminal.debug(f"unknown event: {data}.")
 
 class ConnectionClosedEvent(Event):
     def __init__(self, connection):
@@ -107,8 +105,6 @@ class SuccessEvent(Event):
         super().__init__(connection)
 
     def handle(self, data: list[bytes]):
-        global ongoing_requests
-
         global_utils.decrement_requests()
 
         Terminal.debug(f"success with [{global_utils.get_requests()}] ongoing requests.")
@@ -177,6 +173,9 @@ class NetworkUtils:
 
         if raw_data is None: return None
 
+        if global_utils.get_is_rsa():
+            raw_data = Encryption.decrypt_with_aes(raw_data)
+
         sep_parts = raw_data.split(NetworkUtils.SEPERATOR)
         raw_parts = raw_data.split(NetworkUtils.SEPERATOR, 1)
 
@@ -205,8 +204,14 @@ class NetworkUtils:
     def send_parts(dst: socket.socket, parts: list, addr: tuple[str, int]):
         str_parts_encoded = [b if type(b) != str else b.encode() for b in parts]
         parts_encoded = [b if type(b) != int else b.to_bytes() for b in str_parts_encoded]
-        bts = NetworkUtils.SEPERATOR.join(parts_encoded)
-        return NetworkUtils.__send_raw(dst, bts, addr)
+        data = NetworkUtils.SEPERATOR.join(parts_encoded)
+
+        Terminal.debug(f"use rsa: {global_utils.get_is_rsa()}")
+
+        if global_utils.get_is_rsa():
+            data = NetworkUtils.SEPERATOR.join(Encryption.encrypt_with_aes(data))
+
+        return NetworkUtils.__send_raw(dst, data, addr)
 
     @staticmethod
     def add_listener(event_id: Events, event: type[Event], data_type: DataType = DataType.Part):
@@ -236,7 +241,7 @@ class NetworkUtils:
     def listen_for_events(s: socket.socket, connection: Connection):
         def thread():
             while True:
-                try:
+                # try:
                     parts = NetworkUtils.recieve_parts(s)
                     if parts is None:
                         if s.type == socket.SOCK_DGRAM:
@@ -246,14 +251,11 @@ class NetworkUtils:
 
                     sep_parts, raw_parts = parts
 
-                    try:
-                        event_id_str: str = sep_parts[0].decode()
-                        event_id: Events = Events.from_value(event_id_str)
+                    event_id_str: str = sep_parts[0].decode()
+                    event_id: Events = Events.from_value(event_id_str)
 
-                        NetworkUtils.__callback_event(event_id, sep_parts[1:], raw_parts[1:], connection)
-                    except:
-                        Terminal.debug(f"bad event while decoding first part.")
-                except Exception as e:
-                    Terminal.error(f"error at listen_for_events: {e}.")
+                    NetworkUtils.__callback_event(event_id, sep_parts[1:], raw_parts[1:], connection)
+                # except Exception as e:
+                #     Terminal.error(f"error at listen_for_events: {e}.")
 
         threading.Thread(target=thread, daemon=True).start()

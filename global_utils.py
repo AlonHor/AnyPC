@@ -1,4 +1,5 @@
 from pynput import mouse
+from terminal import Terminal
 import msvcrt
 import sys
 
@@ -6,6 +7,7 @@ __ongoing_requests: int = 0
 __mouse_state: int = 0
 __mouse_button: int = 0
 __mouse_listener: mouse.Listener
+__use_rsa: bool = False
 
 def decrement_requests():
     global __ongoing_requests
@@ -23,8 +25,6 @@ def increment_requests():
     return __ongoing_requests
 
 def get_requests():
-    global __ongoing_requests
-
     return __ongoing_requests
 
 def set_requests(n: int):
@@ -52,7 +52,6 @@ def start_listener():
     __mouse_listener.start()
 
 def stop_listener():
-    global __mouse_listener
     __mouse_listener.stop()
 
 def get_mouse_state():
@@ -63,8 +62,19 @@ def get_mouse_state():
     return prev
 
 def get_mouse_button():
-    global __mouse_button
     return __mouse_button
+
+def enable_rsa():
+    global __use_rsa
+    __use_rsa = True
+    Terminal.debug("enabled rsa.")
+
+def disable_rsa():
+    global __use_rsa
+    __use_rsa = False
+
+def get_is_rsa():
+    return __use_rsa
 
 def exit():
     try:

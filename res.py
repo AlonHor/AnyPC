@@ -5,6 +5,7 @@ from events import Events
 from utils import Connection, DataType, Event, NetworkUtils
 from terminal import Terminal
 from constants import Constants
+from encryption import Encryption
 from pynput import keyboard
 
 import numpy as np
@@ -66,7 +67,9 @@ class ScreenWatchAcceptedEvent(Event):
             primary_connection = NetworkUtils.get_primary_connection()
             if primary_connection is None: return
 
-            screen_frame_connection = Connection(socket.SOCK_STREAM, (primary_connection.addr[0], Constants.SCREEN_FRAME_PORT))
+            primary_connection_addr = primary_connection.addr[0]
+
+            screen_frame_connection = Connection(socket.SOCK_STREAM, (primary_connection_addr, Constants.SCREEN_FRAME_PORT))
 
             NetworkUtils.add_listener(Events.ScreenFrame_Action, ScreenFrameEvent, DataType.Raw)
 
@@ -129,10 +132,12 @@ class ScreenControlAcceptedEvent(Event):
             primary_connection = NetworkUtils.get_primary_connection()
             if primary_connection is None: return
 
-            screen_frame_connection = Connection(socket.SOCK_STREAM, (primary_connection.addr[0], Constants.SCREEN_FRAME_PORT))
-            mouse_connection = Connection(socket.SOCK_DGRAM, (primary_connection.addr[0], Constants.MOUSE_UPDATE_PORT))
+            primary_connection_addr = primary_connection.addr[0]
 
-            keyboard_connection = Connection(socket.SOCK_STREAM, (primary_connection.addr[0], Constants.KEYBOARD_UPDATE_PORT))
+            screen_frame_connection = Connection(socket.SOCK_STREAM, (primary_connection_addr, Constants.SCREEN_FRAME_PORT))
+            mouse_connection = Connection(socket.SOCK_DGRAM, (primary_connection_addr, Constants.MOUSE_UPDATE_PORT))
+
+            keyboard_connection = Connection(socket.SOCK_STREAM, (primary_connection_addr, Constants.KEYBOARD_UPDATE_PORT))
 
             def on_press(key: keyboard.Key | keyboard.KeyCode | None): on_keyboard(key, True)
             def on_release(key: keyboard.Key | keyboard.KeyCode | None): on_keyboard(key, False)
@@ -294,3 +299,12 @@ class CommandRunEvent(Event):
     def handle(self, data: list[bytes]):
         output = data[0].decode()
         Terminal.out(output)
+
+class PublicKeyTransferEvent(Event):
+    def handle(self, data: list[bytes]):
+        public_key = data[0]
+
+        secret = Encryption.encrypt_aes_with_rsa(public_key)
+        req.SecretKeyTransferRequest(self.connection).handle(secret)
+
+        global_utils.enable_rsa()
