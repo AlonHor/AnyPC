@@ -241,7 +241,7 @@ class NetworkUtils:
     def listen_for_events(s: socket.socket, connection: Connection):
         def thread():
             while True:
-                # try:
+                try:
                     parts = NetworkUtils.recieve_parts(s)
                     if parts is None:
                         if s.type == socket.SOCK_DGRAM:
@@ -255,7 +255,7 @@ class NetworkUtils:
                     event_id: Events = Events.from_value(event_id_str)
 
                     NetworkUtils.__callback_event(event_id, sep_parts[1:], raw_parts[1:], connection)
-                # except Exception as e:
-                #     Terminal.error(f"error at listen_for_events: {e}.")
+                except Exception as e:
+                    Terminal.error(f"error at listen_for_events: {e}.")
 
         threading.Thread(target=thread, daemon=True).start()
