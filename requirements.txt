@@ -1,0 +1,16 @@
+# Cryptography
+pycryptodome>=3.19.0
+
+# Input Control
+pynput>=1.7.6
+pyautogui>=0.9.54
+
+# Windows API
+pywin32>=306; platform_system=="Windows"
+
+# Data Processing
+numpy>=1.24.3
+
+# Image/Video Processing
+opencv-python>=4.8.0
+av>=11.0.0  # PyAV for multimedia processing
