@@ -68,7 +68,7 @@ To set up the project locally, follow these steps:
 To start using the AnyPC client, run the main application script:
 
 ```bash
-python main.py
+python client.py
 ```
 
 Follow the on-screen instructions to connect to the AnyPC server and start controlling a remote computer.
